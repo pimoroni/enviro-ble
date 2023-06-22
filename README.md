@@ -1,9 +1,24 @@
 # Enviro MicroPython - Bluetooth Low-energy Firmware <!-- omit in toc -->
 
+- [About Enviro BLE](#about-enviro-ble)
 - [About Enviro](#about-enviro)
 - [Powering Enviro boards](#powering-enviro-boards)
 - [Supported products](#supported-products)
 
+## About Enviro BLE
+
+Enviro BLE is an alternate firmware for your Pimoroni Enviro boards that blasts sensor readings over Bluetooth low-energy.
+
+The focus here is upon making each Enviro board as simple as possible- there's no on-device logging, no data upload, nothing to configure. It's just plug and play!
+
+You must use a client Pico W, a Raspberry Pi or other BLE-enabled device to gather and make sense of these readings. We'll provide a small client library to give you some clues how to do this, but each board advertises two services:
+
+* Device Information
+* Environmental Sensing
+
+Device Information includes the make (that's us, Pimoroni) the model (one of "indoor", "weather", "urban" or "grow"), the serial number (a unique ID provided by the Pico W's onboard flash chip), the Firmware version (that's the version of our custom MicroPython) and, finally, the Software version (that's the version of Enviro BLE currently running).
+
+With this information you should be able to figure out which board you're talking to, though in practise it doesn't necessarily matter since you can peek at the Environmental Sensing service to see what sensors are available.
 
 ## About Enviro
 
