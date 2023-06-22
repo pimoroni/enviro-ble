@@ -1,5 +1,6 @@
 import sys
 import time
+import struct
 
 from micropython import const
 
@@ -17,6 +18,7 @@ board = enviroble.get_board()
 # org.bluetooth.service.enviro_sensing
 _ENV_SENSE_UUID = bluetooth.UUID(0x181A)
 _DEVICE_INFO_UUID = bluetooth.UUID(0x180A)
+_AUTOMATION_UUID = bluetooth.UUID(0x1815)
 
 # org.bluetooth.characteristic.temperature
 # org.bluetooth.characteristic.gap.appearance.xml
@@ -55,7 +57,24 @@ if board.model == "weather":
 if board.model in ("grow", "weather", "indoor"):
     sensors.append(enviroble.EnviroSensor(enviro_sensing, "luminance"))
 
-aioble.register_services(enviro_sensing, device_info)
+if board.model == "grow":
+    automation = aioble.Service(_AUTOMATION_UUID)
+    soil_channels = {
+        "moisture_a": enviroble.EnviroAnalog(automation, "Soil Moisure A"),
+        "moisture_b": enviroble.EnviroAnalog(automation, "Soil Moisure B"),
+        "moisture_c": enviroble.EnviroAnalog(automation, "Soil Moisure C")
+    }
+    pump_channels = [
+        enviroble.EnviroDigital(automation, "Pump A", board.pump_pins[0]),
+        enviroble.EnviroDigital(automation, "Pump B", board.pump_pins[1]),
+        enviroble.EnviroDigital(automation, "Pump C", board.pump_pins[2])
+    ]
+
+    aioble.register_services(enviro_sensing, device_info, automation)
+
+else:
+    aioble.register_services(enviro_sensing, device_info)
+    
 
 
 # This would be periodically polling a hardware sensor.
@@ -68,7 +87,19 @@ async def sensor_task():
         last_reading = time.ticks_ms()
         for sensor in sensors:
             sensor.update_from_dict(readings)
+        if board.model == "grow":
+            for channel, soil_channel in soil_channels.items():
+                soil_channel.write_float(readings.get(channel))
         await asyncio.sleep_ms(1000 * 60)
+
+
+async def io_task():
+    while True:
+        for pump_channel in pump_channels:
+            value = await pump_channel.update()
+            if value is not None:
+                print(f"Pump set to {value}")
+        await asyncio.sleep_ms(1000 * 1)
 
 
 # Serially wait for connections. Don't advertise while a central is
@@ -98,10 +129,14 @@ async def blink_task():
 
 # Run both tasks.
 async def main():
-    t1 = asyncio.create_task(sensor_task())
-    t2 = asyncio.create_task(peripheral_task())
-    t3 = asyncio.create_task(blink_task())
-    await asyncio.gather(t1, t2, t3)
+    tasks = [
+        asyncio.create_task(sensor_task()),
+        asyncio.create_task(peripheral_task()),
+        asyncio.create_task(blink_task())
+    ]
+    if board.model == "grow":
+        tasks.append(asyncio.create_task(io_task()))
+    await asyncio.gather(*tasks)
 
 
 asyncio.run(main())

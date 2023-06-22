@@ -2,7 +2,7 @@ import time
 from breakout_bme280 import BreakoutBME280
 from breakout_ltr559 import BreakoutLTR559
 from machine import Pin, PWM
-from enviro import i2c, logging
+from enviroble import i2c, logging
 from collections import OrderedDict
 
 model = "grow"
@@ -78,7 +78,7 @@ def drip_noise():
 
 
 def water(moisture_levels):
-    from enviro import config
+    from enviroble import config
     targets = [
         config.moisture_target_a,
         config.moisture_target_b,

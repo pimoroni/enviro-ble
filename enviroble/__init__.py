@@ -1,4 +1,5 @@
 import enviroble.constants as constants
+import uasyncio as asyncio
 import aioble
 import bluetooth
 import struct
@@ -85,6 +86,38 @@ class logging:
 
     def debug(self, *args, **kwargs):
       pass
+
+
+class EnviroAnalog(aioble.Characteristic):
+    UUID = 0x2A58
+    def __init__(self, service, title):
+        aioble.Characteristic.__init__(self, service, bluetooth.UUID(self.UUID), read=True, write=False, notify=True)
+        aioble.Descriptor(self, bluetooth.UUID(0x2901), read=True, initial=title)
+
+    def write_float(self, value):
+        self.write(struct.pack("<h", int(value * 100)))
+
+
+class EnviroDigital(aioble.Characteristic):
+    UUID = 0x2A56
+    def __init__(self, service, title, pin):
+        aioble.Characteristic.__init__(self, service, bluetooth.UUID(self.UUID), read=True, write=True, notify=True)
+        aioble.Descriptor(self, bluetooth.UUID(0x2901), read=True, initial=title)
+        self._iopin = pin
+
+    async def update(self):
+        try:
+            state = await self.written(100)
+            value = self.read()
+            value = struct.unpack("<h", value)[0]
+            if value == 1:
+                self._iopin.on()
+                return True
+            else:
+                self._iopin.off()
+                return False
+        except asyncio.TimeoutError:
+            return None
 
 
 class EnviroSensor(aioble.Characteristic):
