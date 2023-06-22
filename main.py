@@ -50,6 +50,7 @@ sensors.append(enviroble.EnviroSensor(enviro_sensing, "pressure"))
 
 if board.model == "weather":
     sensors.append(enviroble.EnviroSensor(enviro_sensing, "rain_per_second"))
+    sensors.append(enviroble.EnviroSensor(enviro_sensing, "wind_direction"))
 
 if board.model in ("grow", "weather", "indoor"):
     sensors.append(enviroble.EnviroSensor(enviro_sensing, "luminance"))

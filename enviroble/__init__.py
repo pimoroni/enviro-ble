@@ -93,7 +93,8 @@ class EnviroSensor(aioble.Characteristic):
         "pressure": bluetooth.UUID(0x2A6D),
         "humidity": bluetooth.UUID(0x2A6F),
         "rain_per_second": bluetooth.UUID(0x2A78),
-        "luminance": bluetooth.UUID(0x2A77)   # It's not Lux, but it'll do for now
+        "luminance": bluetooth.UUID(0x2A77),   # It's not Lux, but it'll do for now,
+        "wind_direction": bluetooth.UUID(0x2A71)
     }
 
     def __init__(self, service, property, read=True, notify=True):
@@ -125,3 +126,8 @@ class EnviroSensor(aioble.Characteristic):
         # 1,000 W/m2 (1 Sun) ~= 120,000 Lux
         scale = 120 / 10
         return struct.pack("<h", int(light / scale))
+
+    def _encode_wind_direction(self, direction):
+        # clockwise relative to Geographic North
+        # uint16t: degrees with a resolution of 0.01
+        return struct.pack("<h", int(direction * 100))
