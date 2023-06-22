@@ -1,11 +1,13 @@
-import time, math, os
+import time
+import math
+import os
 from breakout_bme280 import BreakoutBME280
 from breakout_ltr559 import BreakoutLTR559
 from machine import Pin
 from pimoroni import Analog
-from enviro import i2c, activity_led, logging
-import enviro.helpers as helpers
-from enviro.constants import WAKE_REASON_RTC_ALARM, WAKE_REASON_BUTTON_PRESS
+from enviroble import i2c, activity_led, logging
+import enviroble.helpers as helpers
+from enviroble.constants import WAKE_REASON_RTC_ALARM, WAKE_REASON_BUTTON_PRESS
 from collections import OrderedDict
 
 model = "weather"

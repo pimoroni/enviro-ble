@@ -1,4 +1,7 @@
-import enviro.constants as constants
+import enviroble.constants as constants
+import aioble
+import bluetooth
+import struct
 from pimoroni_i2c import PimoroniI2C
 from machine import Pin, PWM, Timer
 import math
@@ -27,7 +30,7 @@ else:
 
 # return the module that implements this board type
 def get_board():
-    module = f"enviro.boards.{model}"
+    module = f"enviroble.boards.{model}"
     return getattr(getattr(__import__(module), "boards"), model)
   
 
@@ -82,3 +85,43 @@ class logging:
 
     def debug(self, *args, **kwargs):
       pass
+
+
+class EnviroSensor(aioble.Characteristic):
+    UUID = {
+        "temperature": bluetooth.UUID(0x2A6E),
+        "pressure": bluetooth.UUID(0x2A6D),
+        "humidity": bluetooth.UUID(0x2A6F),
+        "rain_per_second": bluetooth.UUID(0x2A78),
+        "luminance": bluetooth.UUID(0x2A77)   # It's not Lux, but it'll do for now
+    }
+
+    def __init__(self, service, property, read=True, notify=True):
+        aioble.Characteristic.__init__(self, service, self.UUID[property], read, notify)
+        self.property = property
+        self.encoder = getattr(self, f"_encode_{property}")
+
+    def update_from_dict(self, readings):
+        self.write(self.encoder(readings.get(self.property)))
+
+    # Helper to encode the temperature characteristic encoding (sint16, hundredths of a degree).
+    def _encode_temperature(self, temp_deg_c):
+        return struct.pack("<h", int(temp_deg_c * 100))
+
+    def _encode_pressure(self, press_pa):
+        return struct.pack("<h", int(press_pa * 10))
+
+    def _encode_humidity(self, hum):
+        # uint16t: % with a resolution of 0.01
+        return struct.pack("<h", int(hum * 100))
+
+    def _encode_rain_per_second(self, rainfall):
+        # uint16t: meters with a resolution of 1mm- so, basically mm then?!
+        return struct.pack("<h", int(rainfall))
+
+    def _encode_luminance(self, light):
+        # 0.1 W/m2
+        # 1 W/m2 ~= 120 Lux
+        # 1,000 W/m2 (1 Sun) ~= 120,000 Lux
+        scale = 120 / 10
+        return struct.pack("<h", int(light / scale))

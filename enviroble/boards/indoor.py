@@ -1,10 +1,10 @@
-import enviro.helpers as helpers
+import enviroble.helpers as helpers
 import math
 from breakout_bme68x import BreakoutBME68X
 from breakout_bh1745 import BreakoutBH1745
 from collections import OrderedDict
 
-from enviro import i2c
+from enviroble import i2c
 
 model = "indoor"
 

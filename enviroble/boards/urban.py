@@ -2,7 +2,7 @@ import time
 from machine import Pin, ADC
 from breakout_bme280 import BreakoutBME280
 from pimoroni_i2c import PimoroniI2C
-from enviro import i2c, logging
+from enviroble import i2c, logging
 from collections import OrderedDict
 
 model = "urban"
