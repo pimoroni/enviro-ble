@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+DEVICES=$(mpremote connect list | grep MicroPython | cut -d " " -f 1)
+
+if [ -z $DEVICES ] ; then
+  echo "No MicroPython devices found in FS mode"
+  exit 1
+fi
+
+DEVICE=${DEVICES[0]}
+
+echo "Copying Enviro firmware files to ${DEVICE}"
+
+function create_directory {
+  echo -n "> creating directory $1"
+
+  RESULT=$(mpremote connect ${DEVICE} mkdir $1)
+  ERROR=$?
+
+
+  if [ $ERROR -eq 0 ] ; then
+    echo " .. done!"
+  else
+    if [[ "$RESULT" == *"EEXIST"* ]] ; then
+      echo " .. already exists, skipping."
+    else
+      echo " .. failed!"
+      echo "! it looks like this device is already in use - is Thonny running?"
+      exit 1
+    fi
+  fi
+}
+
+function copy {
+  for file in $1
+  do
+    echo -n "> copying file $file"
+    mpremote connect ${DEVICE} cp $file $2 > /dev/null
+    if [ $? -eq 0 ] ; then
+      echo " .. done!"
+    else
+      echo " .. failed!"
+    fi
+  done
+}
+
+
+create_directory enviro
+create_directory enviro/boards
+
+copy "main.py" :
+
+copy "enviro/*.py" :enviro/
+
+copy "enviro/boards/*.py" :enviro/boards/
