@@ -45,11 +45,11 @@ function copy {
 }
 
 
-create_directory enviro
-create_directory enviro/boards
+create_directory enviroble
+create_directory enviroble/boards
 
 copy "main.py" :
 
-copy "enviro/*.py" :enviro/
+copy "enviroble/*.py" :enviroble/
 
-copy "enviro/boards/*.py" :enviro/boards/
+copy "enviroble/boards/*.py" :enviroble/boards/
